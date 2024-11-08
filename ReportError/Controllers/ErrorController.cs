@@ -95,17 +95,14 @@ public class ErrorController:ControllerBase
             .Where(e => e.Shop.ToLower().Contains(lowerShop) && 
                         e.DescriptionError.ToLower().Contains(lowerTypeError))
             .ToList();
-        //var Errors = _context.Errors.Skip((pageNumber-1)*pageSize).Take(pageSize).Where(e => e.Shop.ToLower().Contains(shop.ToLower())&&e.DescriptionError.ToLower().Contains(typeError.ToLower())).ToList();
        Console.WriteLine(Errors.Count());
         var totalItem = _context.Errors.Where(e => e.Shop.ToLower().Contains(shop.ToLower())&&e.DescriptionError.ToLower().Contains(typeError.ToLower())).ToList().Count();
         var totalPage = (int)Math.Ceiling((double)totalItem / pageSize);
         
         return Ok(new { 
-                         page = pageNumber, 
-                         pageSize = pageSize ,
+                            Items = Errors,
                          totalItem = totalItem,
-                         totalPages = totalPage,
-                         Items = Errors
+                         pageSize =Errors.Count 
                          
         });
     }
