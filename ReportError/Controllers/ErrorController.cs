@@ -23,7 +23,7 @@ public class ErrorController:ControllerBase
     public async Task<ActionResult<Error>> CreateReport([FromBody] Error error)
     {
         string id = AutoGenerate.GenerateRandomString(10);
-      
+     //string dateTime = error.TimeReport.ToString();
             error.ErrorId = id;
             _context.Errors.Add(error);
         await _context.SaveChangesAsync();
@@ -70,8 +70,9 @@ public class ErrorController:ControllerBase
 
     [HttpGet("/filter")]
  
-    public IActionResult GetErrorsByShop(
-       DateTime? date,
+    public IActionResult GetErrorsByAttribute(
+       DateTime? fromDate,
+       DateTime? toDate,
        string? typeError,
         string? shop,int pageNumber = 1, int pageSize = 10)
     {
@@ -89,44 +90,34 @@ public class ErrorController:ControllerBase
 
         int skip = (pageNumber - 1) * pageSize;
 
-        var Errors = _context.Errors
-            .Skip(skip)
-            .Take(pageSize)
-            .Where(e => e.Shop.ToLower().Contains(lowerShop) && 
-                        e.DescriptionError.ToLower().Contains(lowerTypeError))
-            .ToList();
+        var Errors = _context.Errors;
+         
+            var sortErr = Errors.Where(e => 
+                    e.Shop.ToLower().Contains(lowerShop)
+                    && 
+                    e.DescriptionError.ToLower().Contains(lowerTypeError)
+                    &&
+                    e.TimeReport >= fromDate
+                    &&
+                   e.TimeReport <= toDate
+                
+                )     .Skip(skip)
+                .Take(pageSize)
+                .ToList();
        Console.WriteLine(Errors.Count());
-        var totalItem = _context.Errors.Where(e => e.Shop.ToLower().Contains(shop.ToLower())&&e.DescriptionError.ToLower().Contains(typeError.ToLower())).ToList().Count();
-        var totalPage = (int)Math.Ceiling((double)totalItem / pageSize);
+        var totalItem = _context.Errors.Where(e => e.Shop.ToLower().Contains(shop.ToLower())
+                                                   && 
+                                                   e.DescriptionError.ToLower().Contains(typeError.ToLower())).ToList().Count();
+        // var totalPage = (int)Math.Ceiling((double)totalItem / pageSize);
         
         return Ok(new { 
-                            Items = Errors,
+                            Items = sortErr,
                          totalItem = totalItem,
-                         pageSize =Errors.Count 
+                         pageSize =sortErr.Count 
                          
         });
     }
-    [HttpGet]
-    public IActionResult GetErrors(int pageNumber = 1, int pageSize = 10)
-    {
-        var errors = _context.Errors
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .ToList();
-        var totalItems = _context.Errors
-            .ToList().Count();
-     
-        var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
-
-        return Ok(new
-        {
-            PageNumber = pageNumber,
-            PageSize = pageSize,
-            TotalItems = totalItems,
-            TotalPages = totalPages,
-            Items = errors
-        });
-    }
+   
 
     [HttpDelete("{id}")]
     public async Task<ActionResult<Error>> DeleteReport(String errorId)
